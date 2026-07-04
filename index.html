@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subnet IP Address</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/jpg" href="https://emileag228.github.io/AmiBa.Web/test.jpg">
+<style>
+:root{
+  --bg:#0A0E27; --card:#111633; --accent:#00F5FF; --accent2:#7B2FFF;
+  --text:#E0E6FF; --green:#00FF41; --error:#FF3D71; --warning:#FFAA00;
+  --glow:0 0 25px rgba(0,245,255,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text); font-family:'Poppins',sans-serif;
+  min-height:100vh; overflow-x:hidden; position:relative;
+}
+#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:.3}
+.container{max-width:1600px;margin:0 auto;padding:20px}
+header{text-align:center;margin-bottom:30px}
+.logo{
+  font-weight:800;font-size:2.8rem;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.tagline{opacity:.7;margin-top:5px}
+.input-section{
+  background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:16px;
+  padding:25px;margin-bottom:30px;box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.input-group{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.input-box{flex:1;min-width:250px}
+label{width:100%;font-weight:600;margin-bottom:8px;display:block}
+input,select{
+  width:100%;background:#000;border:2px solid rgba(255,255,255,.1);border-radius:12px;
+  padding:15px;color:var(--green);font-size:1.1rem;font-family:'Fira Code',monospace;
+}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
+button{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;
+  border-radius:12px;padding:15px 30px;color:var(--bg);font-weight:600;
+  font-size:1rem;cursor:pointer;transition:.3s;
+}
+button:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(123,47,255,.5)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+button.secondary{background:rgba(255,255,255,.1);color:var(--text)}
+.error{color:var(--error);margin-top:10px;min-height:24px;font-weight:600}
+.main-grid{
+  display:grid;gap:25px;grid-template-columns:1fr;
+  opacity:0;transform:translateY(20px);transition:.6s;
+}
+.main-grid.show{opacity:1;transform:translateY(0)}
+@media(min-width:1200px){.main-grid{grid-template-columns:1.2fr 1fr}}
+.card{
+  background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:16px;
+  padding:25px;box-shadow:0 8px 32px rgba(0,0,0,.4);transition:.4s;margin-bottom:25px;
+}
+.card.glow{border-color:var(--accent);box-shadow:var(--glow)}
+.card h3{
+  font-size:1.3rem;margin-bottom:20px;display:flex;align-items:center;gap:10px;color:var(--accent);
+}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.result-item{
+  background:#000;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:15px;
+}
+.result-item.label{opacity:.6;font-size:.85rem;margin-bottom:5px}
+.result-item.value{font-family:'Fira Code',monospace;font-size:1.1rem;color:var(--green);word-break:break-all}
+.table-wrapper{overflow-x:auto;margin-top:15px}
+table{width:100%;border-collapse:collapse;font-family:'Fira Code',monospace;font-size:.9rem}
+th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap}
+th{color:var(--accent);font-weight:600;position:sticky;top:0;background:var(--card)}
+tbody tr:hover{background:rgba(0,245,255,.05)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.tab{
+  background:transparent;border:none;color:var(--text);padding:10px 16px;
+  cursor:pointer;border-radius:8px 8px 0 0;opacity:.6;transition:.3s;font-size:.95rem;
+}
+.tab.active{background:rgba(0,245,255,.1);opacity:1;color:var(--accent);border-bottom:2px solid var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.terminal{
+  background:#000;border:1px solid rgba(0,255,65,.3);border-radius:12px;
+  padding:20px;font-family:'Fira Code',monospace;color:var(--green);position:relative;overflow-x:auto;
+  background-image:repeating-linear-gradient(0deg,rgba(0,255,65,.03),rgba(0,255,65,.03) 1px,transparent 1px,transparent 2px);
+}
+.terminal-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;
+  padding-bottom:10px;border-bottom:1px solid rgba(0,255,65,.2);
+}
+.copy-btn{
+  background:rgba(0,255,65,.1);border:1px solid var(--green);color:var(--green);
+  padding:6px 12px;font-size:.85rem;border-radius:6px;
+}
+.copy-btn:hover{background:rgba(0,255,65,.2);transform:none;box-shadow:none}
+.terminal pre{margin:0;white-space:pre-wrap;line-height:1.6}
+.protocol-desc{
+  background:rgba(123,47,255,.1);border-left:3px solid var(--accent2);
+  padding:15px;margin-bottom:15px;border-radius:8px;font-size:.95rem;line-height:1.6;
+}
+.protocol-desc strong{color:var(--accent2)}
+.icon{width:20px;height:20px;fill:currentColor}
+footer{text-align:center;margin-top:50px;opacity:.5;font-size:.9rem}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<div class="container">
+  <header>
+    <h1 class="logo">Subnetting IP-Address </h1>
+    <p class="tagline">Calculateur IP + Générateur Config Routeur Cisco</p>
+  </header>
+
+  <section class="input-section">
+    <div class="input-group">
+      <div class="input-box">
+        <label for="ipInput">Adresse IPv4 + CIDR</label>
+        <input type="text" id="ipInput" placeholder="Ex: 192.168.10.0/24 ou 10.0.0.1/8" autocomplete="off">
+      </div>
+      <div class="input-box" style="max-width:200px">
+        <label for="subnetMask">Découpage en sous-réseaux</label>
+        <select id="subnetMask">
+          <option value="">Aucun</option>
+        </select>
+      </div>
+      <button id="analyzeBtn">Analyser</button>
+      <button id="exportBtn" class="secondary" disabled>Exporter TXT</button>
+    </div>
+    <div class="error" id="errorMsg"></div>
+  </section>
+
+  <div class="main-grid" id="mainGrid">
+    <div>
+      <div class="card" id="resultCard">
+        <h3><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Analyse Subnetting</h3>
+        <div class="result-grid" id="resultGrid"></div>
+      </div>
+
+      <div class="card" id="subnetCard" style="display:none">
+        <h3><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>Tous les sous-réseaux possibles</h3>
+        <div class="table-wrapper"><div id="subnetTable"></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" id="commandCard">
+        <h3><svg class="icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2-.9-2-2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>Configurations Cisco IOS</h3>
+        <div class="tabs" id="tabs"></div>
+        <div id="tabContents"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Réseau Subnettig -CCNA | <a target="_blank" href="https://emileag228.github.io/AmiBa.Web/">Site Web</a>| By @emileag  </footer>
+</div>
+
+<script>
+// ===== CALCULS RÉSEAU =====
+/**
+ * Calcule toutes les infos de subnetting pour une IP + CIDR
+ * @param {string} ip - ex: "192.168.1.10"
+ * @param {number} cidr - ex: 24
+ * @returns {object} JSON avec toutes les infos
+ */
+function calcSubnet(ip, cidr) {
+  const toInt = ip => ip.split('.').reduce((acc,octet)=> (acc<<8) + parseInt(octet),0)>>>0;
+  const toIp = int => [24,16,8,0].map(s => (int>>>s)&255).join('.');
+
+  const ipInt = toInt(ip);
+  const maskInt = cidr === 0? 0 : (0xFFFFFFFF << (32 - cidr)) >>> 0;
+  const netInt = (ipInt & maskInt) >>> 0;
+  const broadcastInt = (netInt | (~maskInt>>>0)) >>> 0;
+  const firstHost = cidr >= 31? netInt : netInt + 1;
+  const lastHost = cidr >= 31? broadcastInt : broadcastInt - 1;
+  const hosts = cidr >= 31? (cidr === 31? 2 : 1) : Math.pow(2, 32 - cidr) - 2;
+
+  const firstOctet = parseInt(ip.split('.')[0]);
+  let classe = '', desc = '';
+  if (firstOctet >= 1 && firstOctet <= 126) { classe = 'A'; desc = 'Classe A : 1.0.0.0 à 126.255.255.255 - Grands réseaux'; }
+  else if (firstOctet >= 128 && firstOctet <= 191) { classe = 'B'; desc = 'Classe B : 128.0.0.0 à 191.255.255.255 - Réseaux moyens'; }
+  else if (firstOctet >= 192 && firstOctet <= 223) { classe = 'C'; desc = 'Classe C : 192.0.0.0 à 223.255.255.255 - Petits réseaux'; }
+  else if (firstOctet >= 224 && firstOctet <= 239) { classe = 'D'; desc = 'Classe D : Multicast 224.0.0.0 à 239.255.255.255'; }
+  else { classe = 'E'; desc = 'Classe E : Expérimental 240.0.0.0 à 255.255.255.255'; }
+
+  const isPrivate = (
+    (firstOctet === 10) ||
+    (firstOctet === 172 && parseInt(ip.split('.')[1]) >= 16 && parseInt(ip.split('.')[1]) <= 31) ||
+    (firstOctet === 192 && parseInt(ip.split('.')[1]) === 168)
+  );
+
+  const defaultMask = classe === 'A'? '255.0.0.0' : classe === 'B'? '255.255.0.0' : '255.255.255.0';
+
+  return {
+    ip, cidr, classe, descClasse: desc, masque: toIp(maskInt), masqueDefaut: defaultMask,
+    type: isPrivate? 'Privée RFC1918' : 'Publique',
+    reseau: toIp(netInt), broadcast: toIp(broadcastInt),
+    premierHote: toIp(firstHost), dernierHote: toIp(lastHost),
+    nbHotes: hosts, wildcard: toIp(~maskInt>>>0)
+  };
+}
+
+/**
+ * Génère TOUS les sous-réseaux possibles si on découpe un réseau parent
+ * @param {string} ip - IP du réseau parent
+ * @param {number} cidrParent - CIDR du réseau parent
+ * @param {number} cidrEnfant - CIDR cible pour découpage
+ * @returns {Array} Liste complète des sous-réseaux
+ */
+function calcAllSubnets(ip, cidrParent, cidrEnfant) {
+  if (cidrEnfant <= cidrParent || cidrEnfant > 30) return [];
+  const toInt = ip => ip.split('.').reduce((acc,octet)=> (acc<<8) + parseInt(octet),0)>>>0;
+  const toIp = int => [24,16,8,0].map(s => (int>>>s)&255).join('.');
+  const maskParent = (0xFFFFFFFF << (32 - cidrParent)) >>> 0;
+  const netParent = (toInt(ip) & maskParent) >>> 0;
+  const nbSubnets = Math.pow(2, cidrEnfant - cidrParent);
+  const taille = Math.pow(2, 32 - cidrEnfant);
+  const subnets = [];
+
+  for (let i = 0; i < nbSubnets && i < 1024; i++) { // Limite à 1024 pour perf
+    const net = netParent + (i * taille);
+    const bc = net + taille - 1;
+    subnets.push({
+      id: i + 1,
+      reseau: toIp(net),
+      masque: toIp((0xFFFFFFFF << (32 - cidrEnfant)) >>> 0),
+      premier: toIp(net + 1),
+      dernier: toIp(bc - 1),
+      broadcast: toIp(bc),
+      hotes: taille - 2
+    });
+  }
+  return subnets;
+}
+
+// ===== GÉNÉRATION COMMANDES CISCO =====
+function genCommands(d) {
+  const { ip, masque, reseau, wildcard, cidr } = d;
+
+  const protocols = {
+    'Base': {
+      role: 'Configuration de base du routeur : nom, interface, IP',
+      cmd: `enable
+configure terminal
+hostname R1
+interface GigabitEthernet0/0
+ description LAN_${reseau}/${cidr}
+ ip address ${ip} ${masque}
+ no shutdown
+exit
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+write memory`
+    },
+    'HSRP': {
+  role: 'HSRP : First Hop Redundancy Protocol. Plusieurs routeurs partagent une IP virtuelle comme passerelle. Couche 3.',
+  cmd: `interface GigabitEthernet0/0
+ standby 10 ip 192.168.1.1
+ standby 10 priority 110
+ standby 10 preempt
+ standby 10 authentication md5 key-string HSRP-Key
+exit
+show standby brief`
+},
+
+'VRRP': {
+  role: 'VRRP : Virtual Router Redundancy Protocol. Standard ouvert, alternative à HSRP.',
+  cmd: `interface GigabitEthernet0/0
+ vrrp 10 ip 192.168.1.1
+ vrrp 10 priority 110
+ vrrp 10 preempt
+exit
+show vrrp brief`
+},
+'STP': {
+  role: 'STP/RSTP : Spanning Tree Protocol. Empêche les boucles sur les liens redondants. Couche 2.',
+  cmd: `spanning-tree mode rapid-pvst
+spanning-tree vlan 1-4094 priority 24576
+interface GigabitEthernet0/1
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+exit
+show spanning-tree
+show spanning-tree summary`
+},
+'ACL': {
+  role: 'ACL : Access Control List. Filtre le trafic entrant/sortant par IP/port/protocole.',
+  cmd: `ip access-list extended BLOCK_TELNET
+ deny tcp any any eq 23
+ permit ip any any
+interface GigabitEthernet0/0
+ ip access-group BLOCK_TELNET in
+exit
+show access-lists
+show ip interface GigabitEthernet0/0`
+},
+'NTP': {
+  role: 'NTP : Network Time Protocol. Synchronise l\'horloge du routeur. Couche 7.',
+  cmd: `ntp server 216.239.35.0 prefer
+ntp server 129.6.15.28
+ntp authenticate
+ntp authentication-key 1 md5 NTP-Key
+ntp trusted-key 1
+clock timezone GMT 0
+service timestamps log datetime msec
+show ntp status
+show ntp associations`
+},
+'SNMP': {
+  role: 'SNMP v3 : Simple Network Management Protocol. Monitoring sécurisé du routeur.',
+  cmd: `snmp-server group ADMIN v3 priv
+snmp-server user monitor ADMIN v3 auth sha AuthKey priv aes 128 PrivKey
+snmp-server enable traps
+snmp-server host 192.168.1.100 version 3 priv monitor
+exit
+show snmp user
+show snmp group`
+},
+'SSH': {
+  role: 'SSH : Accès distant chiffré. Remplace Telnet. Couche 7.',
+  cmd: `ip domain-name lab.local
+crypto key generate rsa modulus 2048
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+username admin privilege 15 secret CiscoStrongPass
+line vty 0 4
+ transport input ssh
+ login local
+exit
+ip scp server enable
+show ip ssh`
+},
+'QoS': {
+  role: 'QoS : Quality of Service. Priorise VoIP/vidéo, limite le reste. Couche 3.',
+  cmd: `class-map match-all VOIP
+ match dscp ef
+policy-map PRIORITE
+ class VOIP
+  priority percent 30
+ class class-default
+  fair-queue
+interface GigabitEthernet0/1
+ service-policy output PRIORITE
+exit
+show policy-map interface GigabitEthernet0/1`
+},
+'GLBP': {
+  role: 'GLBP : Gateway Load Balancing Protocol. HSRP avec répartition de charge.',
+  cmd: `interface GigabitEthernet0/0
+ glbp 10 ip 192.168.1.1
+ glbp 10 priority 110
+ glbp 10 preempt
+ glbp 10 load-balancing round-robin
+exit
+show glbp brief`
+},
+'PPPoE': {
+  role: 'PPPoE : PPP over Ethernet. Connexion ADSL/Fibre client. Couche 2.',
+  cmd: `interface Dialer1
+ ip address negotiated
+ ip mtu 1492
+ encapsulation ppp
+ dialer pool 1
+ ppp authentication chap callin
+ ppp chap hostname FAI-User
+ ppp chap password FAI-Pass
+interface GigabitEthernet0/1
+ pppoe enable group global
+ pppoe-client dial-pool-number 1
+exit
+show pppoe session`
+},
+'LAG': {
+  role: 'LACP : Link Aggregation. Regroupe plusieurs interfaces pour + de débit/redondance.',
+  cmd: `interface range GigabitEthernet0/2 - 3
+ channel-group 1 mode active
+exit
+interface Port-channel1
+ description LACP_TO_SWITCH
+ no shutdown
+exit
+show etherchannel summary`
+},
+
+    'ARP': {
+      role: 'ARP (Address Resolution Protocol) : Résout les adresses IP en adresses MAC sur le LAN. Couche 2/3.',
+      cmd: `show arp
+show ip arp ${ip}
+clear arp-cache
+arp ${ip} 0011.2233.4455 ARPA
+debug arp`
+    },
+
+    'EIGRP': {
+      role: 'EIGRP (Enhanced Interior Gateway Routing Protocol) : Protocole de routage dynamique Cisco propriétaire. Métrique composite, convergence rapide.',
+      cmd: `router eigrp 100
+ eigrp router-id 1.1.1.1
+ network ${reseau} ${wildcard}
+ no auto-summary
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+exit
+show ip eigrp neighbors
+show ip eigrp topology`
+    },
+
+    'OSPF': {
+      role: 'OSPF (Open Shortest Path First) : Protocole de routage à état de liens. Standard ouvert, zones, métrique coût.',
+      cmd: `router ospf 1
+ router-id 1.1.1.1
+ network ${reseau} ${wildcard} area 0
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+exit
+interface GigabitEthernet0/0
+ ip ospf 1 area 0
+exit
+show ip ospf neighbor
+show ip route ospf`
+    },
+
+    'BGP': {
+      role: 'BGP (Border Gateway Protocol) : Protocole de routage externe. Utilisé sur Internet entre AS. Path-vector.',
+      cmd: `router bgp 65001
+ bgp router-id 1.1.1.1
+ bgp log-neighbor-changes
+ network ${reseau} mask ${masque}
+ neighbor 203.0.113.2 remote-as 65002
+ neighbor 203.0.113.2 update-source Loopback0
+exit
+show ip bgp summary
+show ip bgp neighbors`
+    },
+
+    'NAT': {
+      role: 'NAT (Network Address Translation) : Traduit adresses privées en publiques. PAT = surcharge de ports.',
+      cmd: `access-list 1 permit ${reseau} ${wildcard}
+ip nat inside source list 1 interface GigabitEthernet0/1 overload
+interface GigabitEthernet0/0
+ ip nat inside
+interface GigabitEthernet0/1
+ ip nat outside
+exit
+show ip nat translations
+show ip nat statistics`
+    },
+
+    'VPN': {
+      role: 'VPN IPsec : Tunnel chiffré site-à-site. IKE Phase1 + IPsec Phase2.',
+      cmd: `crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 86400
+crypto isakmp key MySecretKey address 203.0.113.2
+crypto ipsec transform-set TS esp-aes 256 esp-sha256-hmac
+ mode tunnel
+crypto map CMAP 10 ipsec-isakmp
+ set peer 203.0.113.2
+ set transform-set TS
+ match address 100
+interface GigabitEthernet0/1
+ crypto map CMAP
+access-list 100 permit ip ${reseau} ${wildcard} 10.0.0.0 0.255.255.255`
+    },
+
+    'DNS': {
+      role: 'DNS (Domain Name System) : Résolution noms de domaine en IP. Le routeur peut faire serveur/cache DNS.',
+      cmd: `ip dns server
+ip name-server 8.8.8.8
+ip name-server 1.1.1.1
+ip domain-lookup
+ip domain-name lab.local
+ip host serveur.local ${ip}
+show hosts`
+    },
+
+    'RIP': {
+      role: 'RIP (Routing Information Protocol) v2 : Protocole distance-vector ancien. Métrique = nombre de sauts, max 15.',
+      cmd: `router rip
+ version 2
+ no auto-summary
+ network ${reseau}
+ passive-interface GigabitEthernet0/1
+ timers basic 30 180 180 240
+exit
+show ip protocols
+show ip rip database`
+    },
+
+    'DHCP': {
+      role: 'DHCP (Dynamic Host Configuration Protocol) : Attribution automatique IP/Masque/Passerelle/DNS aux clients.',
+      cmd: `service dhcp
+ip dhcp excluded-address ${ip} ${ip}
+ip dhcp pool LAN_${reseau}
+ network ${reseau} ${masque}
+ default-router ${ip}
+ dns-server 8.8.8.8 1.1.1.1
+ lease 7
+exit
+show ip dhcp binding
+show ip dhcp pool`
+    }
+  };
+  return protocols;
+}
+
+// ===== UI & LOGIQUE =====
+const ipInput = document.getElementById('ipInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const exportBtn = document.getElementById('exportBtn');
+const errorMsg = document.getElementById('errorMsg');
+const mainGrid = document.getElementById('mainGrid');
+const subnetMaskSelect = document.getElementById('subnetMask');
+let currentData = null;
+
+analyzeBtn.addEventListener('click', analyser);
+ipInput.addEventListener('keypress', e => { if (e.key === 'Enter') analyser(); });
+subnetMaskSelect.addEventListener('change', () => { if (currentData) afficherSubnets(); });
+
+function analyser() {
+  errorMsg.textContent = '';
+  const val = ipInput.value.trim();
+  const regex = /^(\d{1,3}\.){3}\d{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/;
+
+  if (!regex.test(val)) {
+    return showError('Format invalide. Ex: 192.168.1.1 ou 192.168.1.1/24');
+  }
+
+  try {
+    const [ip, cidrStr] = val.split('/');
+    const cidr = cidrStr? parseInt(cidrStr) : 24;
+    const octets = ip.split('.').map(Number);
+    if (octets.some(o => o < 0 || o > 255)) throw new Error('Octet doit être 0-255');
+    if (cidr < 0 || cidr > 32) throw new Error('CIDR doit être 0-32');
+
+    currentData = calcSubnet(ip, cidr);
+    updateSubnetMaskOptions(cidr);
+    afficherResultats(currentData);
+    afficherCommandes(currentData);
+    exportBtn.disabled = false;
+    mainGrid.classList.add('show');
+    document.querySelectorAll('.card').forEach(c => c.classList.add('glow'));
+    setTimeout(() => document.querySelectorAll('.card').forEach(c => c.classList.remove('glow')), 1000);
+  } catch (e) {
+    showError('Erreur: ' + e.message);
+  }
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  mainGrid.classList.remove('show');
+}
+
+function updateSubnetMaskOptions(cidrParent) {
+  subnetMaskSelect.innerHTML = '<option value="">Aucun découpage</option>';
+  for (let i = cidrParent + 1; i <= 30 && i <= cidrParent + 8; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `/${i} (${Math.pow(2, i - cidrParent)} sous-réseaux)`;
+    subnetMaskSelect.appendChild(opt);
+  }
+}
+
+function afficherResultats(d) {
+  const html = `
+    <div class="result-item"><div class="label">Adresse IP</div><div class="value">${d.ip}/${d.cidr}</div></div>
+    <div class="result-item"><div class="label">Classe</div><div class="value">${d.classe}</div></div>
+    <div class="result-item"><div class="label">Type</div><div class="value">${d.type}</div></div>
+    <div class="result-item"><div class="label">Masque</div><div class="value">${d.masque}</div></div>
+    <div class="result-item"><div class="label">Masque par défaut</div><div class="value">${d.masqueDefaut}</div></div>
+    <div class="result-item"><div class="label">Wildcard</div><div class="value">${d.wildcard}</div></div>
+    <div class="result-item"><div class="label">Adresse Réseau</div><div class="value">${d.reseau}</div></div>
+    <div class="result-item"><div class="label">Broadcast</div><div class="value">${d.broadcast}</div></div>
+    <div class="result-item"><div class="label">1er Hôte utilisable</div><div class="value">${d.premierHote}</div></div>
+    <div class="result-item"><div class="label">Dernier Hôte</div><div class="value">${d.dernierHote}</div></div>
+    <div class="result-item"><div class="label">Nb Hôtes utilisables</div><div class="value">${d.nbHotes.toLocaleString()}</div></div>
+    <div class="result-item"><div class="label">Description</div><div class="value" style="font-size:.9rem">${d.descClasse}</div></div>
+  `;
+  document.getElementById('resultGrid').innerHTML = html;
+}
+
+function afficherSubnets() {
+  const cidrEnfant = parseInt(subnetMaskSelect.value);
+  if (!cidrEnfant ||!currentData) {
+    document.getElementById('subnetCard').style.display = 'none';
+    return;
+  }
+
+  const subnets = calcAllSubnets(currentData.reseau, currentData.cidr, cidrEnfant);
+  if (subnets.length === 0) {
+    document.getElementById('subnetCard').style.display = 'none';
+    return;
+  }
+
+  let table = `<table><thead><tr><th>#</th><th>Réseau</th><th>Masque</th><th>1er IP</th><th>Dernier IP</th><th>Broadcast</th><th>Hôtes</th></tr></thead><tbody>`;
+  subnets.forEach(s => {
+    table += `<tr><td>${s.id}</td><td>${s.reseau}</td><td>${s.masque}</td><td>${s.premier}</td><td>${s.dernier}</td><td>${s.broadcast}</td><td>${s.hotes}</td></tr>`;
+  });
+  table += '</tbody></table>';
+
+  document.getElementById('subnetTable').innerHTML = table;
+  document.getElementById('subnetCard').style.display = 'block';
+}
+
+function afficherCommandes(d) {
+  const protocols = genCommands(d);
+  const tabs = document.getElementById('tabs');
+  const contents = document.getElementById('tabContents');
+  tabs.innerHTML = '';
+  contents.innerHTML = '';
+
+  Object.keys(protocols).forEach((key, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (i === 0? ' active' : '');
+    tab.textContent = key;
+    tab.onclick = () => switchTab(key);
+    tabs.appendChild(tab);
+
+    const content = document.createElement('div');
+    content.className = 'tab-content' + (i === 0? ' active' : '');
+    content.id = 'tab-' + key;
+    content.innerHTML = `
+      <div class="protocol-desc"><strong>Rôle :</strong> ${protocols[key].role}</div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <span>R1(config)# ${key}</span>
+          <button class="copy-btn" onclick="copyCmd(\`${protocols[key].cmd.replace(/`/g,'\\`')}\`)">Copier</button>
+        </div>
+        <pre>${protocols[key].cmd}</pre>
+      </div>
+    `;
+    contents.appendChild(content);
+  });
+}
+
+function switchTab(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + key).classList.add('active');
+}
+
+window.copyCmd = (text) => {
+  navigator.clipboard.writeText(text);
+  event.target.textContent = 'Copié!';
+  setTimeout(() => event.target.textContent = 'Copier', 1500);
+}
+
+// Export PDF File
+exportBtn.addEventListener('click', () => {
+  if (!currentData) return;
+  const d = currentData;
+  const cmds = genCommands(d);
+  let txt = `SUBNETLAB PRO - RAPPORT COMPLET\n`;
+  txt += `=====================================\n\n`;
+  txt += `ADRESSE IP: ${d.ip}/${d.cidr}\n\n`;
+  txt += `ANALYSE SUBNETTING:\n`;
+  txt += `Classe: ${d.classe} - ${d.descClasse}\n`;
+  txt += `Type: ${d.type}\nMasque: ${d.masque} (${d.masqueDefaut} par défaut)\n`;
+  txt += `Wildcard: ${d.wildcard}\nRéseau: ${d.reseau}\nBroadcast: ${d.broadcast}\n`;
+  txt += `Plage hôtes: ${d.premierHote} - ${d.dernierHote}\n`;
+  txt += `Nombre d'hôtes utilisables: ${d.nbHotes}\n\n`;
+
+  const cidrEnfant = parseInt(subnetMaskSelect.value);
+  if (cidrEnfant) {
+    const subnets = calcAllSubnets(d.reseau, d.cidr, cidrEnfant);
+    txt += `DECOUPAGE EN /${cidrEnfant} (${subnets.length} sous-réseaux):\n`;
+    subnets.forEach(s => {
+      txt += `${s.id}. ${s.reseau}/${cidrEnfant} | ${s.premier}-${s.dernier} | BC: ${s.broadcast}\n`;
+    });
+    txt += `\n`;
+  }
+
+  txt += `=== CONFIGURATIONS CISCO IOS ===\n\n`;
+  Object.entries(cmds).forEach(([k,v]) => {
+    txt += `[${k}] - ${v.role}\n${v.cmd}\n\n`;
+  });
+
+  const blob = new Blob([txt], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `emileag@_${d.ip.replace(/\./g,'_')}_${d.cidr}.TXT`;
+  a.click();
+});
+
+// ===== ANIMATION FOND =====
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+class Particle{
+  constructor(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.vx=(Math.random()-.5)*.5;this.vy=(Math.random()-.5)*.5;this.r=Math.random()*2+1}
+  update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>canvas.width)this.vx*=-1;if(this.y<0||this.y>canvas.height)this.vy*=-1}
+  draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle='rgba(0,245,255,.8)';ctx.fill()}
+}
+for(let i=0;i<80;i++)particles.push(new Particle());
+
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{p.update();p.draw()});
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(123,47,255,${1-dist/120})`;ctx.lineWidth=.5;ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
